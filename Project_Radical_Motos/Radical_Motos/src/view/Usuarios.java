@@ -36,6 +36,7 @@ public class Usuarios extends JDialog {
 	private JTextField txtNome;
 	private JTextField txtLogin;
 	private JPasswordField txtSenha;
+	private JTextField txtID;
 
 	/**
 	 * Launch the application.
@@ -64,15 +65,15 @@ public class Usuarios extends JDialog {
 		contentPanel.setLayout(null);
 		
 		JLabel lblNewLabel = new JLabel("NOME");
-		lblNewLabel.setBounds(10, 50, 48, 14);
+		lblNewLabel.setBounds(10, 57, 48, 14);
 		contentPanel.add(lblNewLabel);
 		
 		JLabel lblLogin = new JLabel("LOGIN");
-		lblLogin.setBounds(10, 79, 48, 14);
+		lblLogin.setBounds(10, 85, 48, 14);
 		contentPanel.add(lblLogin);
 		
 		txtNome = new JTextField();
-		txtNome.setBounds(81, 48, 292, 17);
+		txtNome.setBounds(81, 55, 292, 17);
 		contentPanel.add(txtNome);
 		txtNome.setColumns(10);
 		
@@ -81,7 +82,7 @@ public class Usuarios extends JDialog {
 		contentPanel.add(lblSenha);
 		
 		txtLogin = new JTextField();
-		txtLogin.setBounds(81, 76, 86, 20);
+		txtLogin.setBounds(81, 83, 127, 17);
 		contentPanel.add(txtLogin);
 		txtLogin.setColumns(10);
 		
@@ -110,8 +111,18 @@ public class Usuarios extends JDialog {
 		contentPanel.add(btnLimpar);
 		
 		txtSenha = new JPasswordField();
-		txtSenha.setBounds(81, 108, 232, 17);
+		txtSenha.setBounds(81, 108, 234, 17);
 		contentPanel.add(txtSenha);
+		
+		JLabel lblNewLabel_1 = new JLabel("ID");
+		lblNewLabel_1.setBounds(10, 24, 46, 14);
+		contentPanel.add(lblNewLabel_1);
+		
+		txtID = new JTextField();
+		txtID.setEditable(false);
+		txtID.setBounds(81, 21, 59, 20);
+		contentPanel.add(txtID);
+		txtID.setColumns(10);
 	}//fim do construtor
 	
 	
