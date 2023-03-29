@@ -9,6 +9,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -38,6 +39,9 @@ public class Agenda extends JFrame {
 	private JTextField txtFone;
 	private JTextField txtEmail;
 	private JLabel lblStatus;
+	private ResultSet rs; // Depois Ctrl Shift o //ele serve para pesquisa
+	private JButton btnCreate;
+	private JButton btnBuscar;
 
 	/**
 	 * Launch the application.
@@ -113,7 +117,7 @@ public class Agenda extends JFrame {
 		contentPane.add(txtEmail);
 		txtEmail.setColumns(10);
 
-		JButton btnCreate = new JButton("");
+		btnCreate = new JButton("");
 		btnCreate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// botão adicionar contato
@@ -148,11 +152,11 @@ public class Agenda extends JFrame {
 		btnSobre.setToolTipText("Sobre");
 		btnSobre.setBounds(461, 23, 48, 48);
 		contentPane.add(btnSobre);
-		
+
 		JButton btnLimpar = new JButton("");
 		btnLimpar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				//evento clicar no botão
+				// evento clicar no botão
 				limparCampos();
 			}
 		});
@@ -163,6 +167,21 @@ public class Agenda extends JFrame {
 		btnLimpar.setBorderPainted(false);
 		btnLimpar.setBounds(263, 242, 64, 64);
 		contentPane.add(btnLimpar);
+
+		btnBuscar = new JButton("");
+		btnBuscar.setToolTipText("Pesquisar Contato");
+		btnBuscar.setSelectedIcon(new ImageIcon(Agenda.class.getResource("/img/search2.png")));
+		btnBuscar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				buscarContato();
+			}
+		});
+		btnBuscar.setBounds(407, 82, 48, 48);
+		contentPane.add(btnBuscar);
+
+		// substituir o click pela tecla <enter> em um botão
+		getRootPane().setDefaultButton(btnBuscar);
+
 	}// fim do construtor
 
 	/**
@@ -231,6 +250,52 @@ public class Agenda extends JFrame {
 	}// fim do método adicionarContato
 
 	/**
+	 * Metodo Responsavel por Buscar o Contato / Pesquisar contatos
+	 */
+	private void buscarContato() {
+		// validação da busca
+		if (txtNome.getText().isEmpty()) {
+			JOptionPane.showMessageDialog(null, "Digite o nome do Contato");
+			txtNome.requestFocus(); // setar o cursor na caixa do texto
+		} else {
+
+			// Teste
+			// System.out.println("Teste do botão Buscar");
+			String read = "select * from contatos where nome = ? ";
+			try {
+				// abrir conexão
+				con = dao.conectar();
+				// preparar a execuçao do Querry
+				pst = con.prepareStatement(read);
+				// egar o conteudo da caixa de texto e substituir o parametro ?
+				pst.setString(1, txtNome.getText());
+				// uso do ResultSet para obter os dados do contatos
+				ResultSet rs = pst.executeQuery();
+				if (rs.next()) {
+					// preencher as caixas de texto com o fone e o email
+					// ATENÇÃO o Nome (2 campo da Janela ja foi preenchido
+					txtID.setText(rs.getString(1));
+					txtFone.setText(rs.getString(3));
+					txtEmail.setText(rs.getString(4));
+					// desativar botão adiconar
+					btnCreate.setEnabled(false);
+				} else {
+					JOptionPane.showMessageDialog(null, "Contato inexiste");
+					// ativar o botão adicionar
+					btnCreate.setEnabled(true);
+					// desativar botão pesquisar
+					btnBuscar.setEnabled(false);
+				}
+				// Fechar Conexão
+				con.close();
+			} catch (Exception e) {
+				// TODO: handle exception
+				System.out.println(e);
+			}
+		}
+	}// fim do metodo buscar contato
+
+	/**
 	 * Método responsável por limpar os campos
 	 */
 	private void limparCampos() {
@@ -238,5 +303,8 @@ public class Agenda extends JFrame {
 		txtNome.setText(null);
 		txtFone.setText(null);
 		txtEmail.setText(null);
-	} //fim do método limparCampos()
+		// setar botoes pesquisar e criar
+		btnCreate.setEnabled(true);
+		btnBuscar.setEnabled(true);
+	} // fim do método limparCampos()
 }// fim do código

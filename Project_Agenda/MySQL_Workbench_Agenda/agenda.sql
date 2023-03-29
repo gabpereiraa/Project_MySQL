@@ -73,9 +73,28 @@ values ('Linus torvalds','linus@email.com');
 insert into contatos(nome,fone,email)
 values ('Leandro Ramos','(55)(11)99999-8888','leando2email.com');
 
+-- CRUD [Read]
+
+-- selecionar tudo no banco de dados (CUIDADO!)
 select * from contatos;
 
+-- selecionar de acordo com um criterio
+-- pesquisando por ID
+select * from contatos where id = 1;
+-- pesquisando por nome
+select * from contatos where nome = 'Bill Gates';
+-- pesquisando por letra
+select * from contatos where nome like 'b%';
 
+-- seleção personalizada
+-- filtrar por nome e telefone
+select nome, fone from contatos;
+-- filtrar nome para contato, fone para telefone e mail para e-mail
+select nome as Contato, fone as Telefone, email as E_mail from contatos;
+-- filtrar nome para contato, fone para telefone e mail para e-mail em ordem alfabetica
+select nome as Contato, fone as Telefone, email as E_mail from contatos order by nome;
+-- filtrar nome para contato, fone para telefone e mail para e-mail em ordem Z ate A
+select nome as Contato, fone as Telefone, email as E_mail from contatos order by nome desc;
 
 
 
