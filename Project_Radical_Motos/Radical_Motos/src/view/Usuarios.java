@@ -1,25 +1,24 @@
 package view;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-
-import model.DAO;
-
 import java.awt.Toolkit;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JTextField;
-import javax.swing.ImageIcon;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.awt.event.ActionEvent;
+import java.sql.ResultSet;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
+
+import model.DAO;
 
 public class Usuarios extends JDialog {
 	
@@ -37,6 +36,9 @@ public class Usuarios extends JDialog {
 	private JTextField txtLogin;
 	private JPasswordField txtSenha;
 	private JTextField txtID;
+	private ResultSet rs; // Depois Ctrl Shift o //ele serve para pesquisa
+	private JButton btnBuscar;
+	private JButton btnCreate;
 
 	/**
 	 * Launch the application.
@@ -65,28 +67,28 @@ public class Usuarios extends JDialog {
 		contentPanel.setLayout(null);
 		
 		JLabel lblNewLabel = new JLabel("NOME");
-		lblNewLabel.setBounds(10, 57, 48, 14);
+		lblNewLabel.setBounds(10, 74, 48, 14);
 		contentPanel.add(lblNewLabel);
 		
 		JLabel lblLogin = new JLabel("LOGIN");
-		lblLogin.setBounds(10, 85, 48, 14);
+		lblLogin.setBounds(10, 118, 48, 14);
 		contentPanel.add(lblLogin);
 		
 		txtNome = new JTextField();
-		txtNome.setBounds(81, 55, 292, 17);
+		txtNome.setBounds(81, 72, 292, 17);
 		contentPanel.add(txtNome);
 		txtNome.setColumns(10);
 		
 		JLabel lblSenha = new JLabel("SENHA");
-		lblSenha.setBounds(10, 110, 48, 14);
+		lblSenha.setBounds(10, 161, 48, 14);
 		contentPanel.add(lblSenha);
 		
 		txtLogin = new JTextField();
-		txtLogin.setBounds(81, 83, 127, 17);
+		txtLogin.setBounds(81, 116, 127, 17);
 		contentPanel.add(txtLogin);
 		txtLogin.setColumns(10);
 		
-		JButton btnCreate = new JButton("");
+		btnCreate = new JButton("");
 		btnCreate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				adicionarUsuario();
@@ -94,7 +96,7 @@ public class Usuarios extends JDialog {
 		});
 		btnCreate.setContentAreaFilled(false);
 		btnCreate.setIcon(new ImageIcon(Usuarios.class.getResource("/img/add-people.png")));
-		btnCreate.setBounds(52, 177, 48, 48);
+		btnCreate.setBounds(52, 202, 48, 48);
 		contentPanel.add(btnCreate);
 		
 		JButton btnLimpar = new JButton("");
@@ -107,22 +109,41 @@ public class Usuarios extends JDialog {
 		btnLimpar.setToolTipText("Limpar Campos");
 		btnLimpar.setContentAreaFilled(false);
 		btnLimpar.setIcon(new ImageIcon(Usuarios.class.getResource("/img/eraser.png")));
-		btnLimpar.setBounds(110, 177, 48, 48);
+		btnLimpar.setBounds(110, 202, 48, 48);
 		contentPanel.add(btnLimpar);
 		
 		txtSenha = new JPasswordField();
-		txtSenha.setBounds(81, 108, 234, 17);
+		txtSenha.setBounds(81, 159, 234, 17);
 		contentPanel.add(txtSenha);
 		
 		JLabel lblNewLabel_1 = new JLabel("ID");
-		lblNewLabel_1.setBounds(10, 24, 46, 14);
+		lblNewLabel_1.setBounds(12, 44, 46, 14);
 		contentPanel.add(lblNewLabel_1);
 		
 		txtID = new JTextField();
 		txtID.setEditable(false);
-		txtID.setBounds(81, 21, 59, 20);
+		txtID.setBounds(81, 41, 59, 20);
 		contentPanel.add(txtID);
 		txtID.setColumns(10);
+		
+		btnBuscar = new JButton("");
+		btnBuscar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				buscarContato();
+			}
+		});
+		btnBuscar.setToolTipText("Pesquisar Contato");
+		btnBuscar.setSelectedIcon(new ImageIcon(Usuarios.class.getResource("/img/search-moto.png")));
+		btnBuscar.setBounds(218, 100, 48, 48);
+		contentPanel.add(btnBuscar);
+		
+		
+		// substituir o click pela tecla <enter> em um botão
+		getRootPane().setDefaultButton(btnBuscar);
+
+		
+		
+		
 	}//fim do construtor
 	
 	
@@ -175,12 +196,65 @@ public class Usuarios extends JDialog {
 	}// fim do método adicionarContato
 	
 	
+	
+	/**
+	 * Metodo Responsavel por Buscar o Contato / Pesquisar contatos
+	 */
+	private void buscarContato() {
+		// validação da busca
+		if (txtLogin.getText().isEmpty()) {
+			JOptionPane.showMessageDialog(null, "Digite o Login do Usuario");
+			txtLogin.requestFocus(); // setar o cursor na caixa do texto
+		} else {
+
+			// Teste
+			// System.out.println("Teste do botão Buscar");
+			String read = "select * from usuarios where login = ? ";
+			try {
+				// abrir conexão
+				con = dao.conectar();
+				// preparar a execuçao do Querry
+				pst = con.prepareStatement(read);
+				// egar o conteudo da caixa de texto e substituir o parametro ?
+				pst.setString(1, txtLogin.getText());
+				// uso do ResultSet para obter os dados do contatos
+				ResultSet rs = pst.executeQuery();
+				if (rs.next()) {
+					// preencher as caixas de texto com o fone e o email
+					// ATENÇÃO o Nome (2 campo da Janela ja foi preenchido
+					txtID.setText(rs.getString(1));
+					txtNome.setText(rs.getString(2));
+					txtSenha.setText(rs.getString(4));
+					// desativar botão adiconar
+					btnCreate.setEnabled(false);
+				} else {
+					JOptionPane.showMessageDialog(null, "Usuário Inexistente");
+					// ativar o botão adicionar
+					btnCreate.setEnabled(true);
+					// desativar botão pesquisar
+					btnBuscar.setEnabled(false);
+				}
+				// Fechar Conexão
+				con.close();
+			} catch (Exception e) {
+				// TODO: handle exception
+				System.out.println(e);
+			}
+		}
+	}// fim do metodo buscar contato
+	
+	
+	
 	/**
 	 * Método responsável por limpar os campos
 	 */
 	private void limparCampos() {
+		txtID.setText(null);
 		txtNome.setText(null);
 		txtLogin.setText(null);
 		txtSenha.setText(null);
+		// setar botoes pesquisar e criar
+		btnCreate.setEnabled(true);
+		btnBuscar.setEnabled(true);
 	} //fim do método limparCampos()
 }//fim do codigo
