@@ -42,6 +42,8 @@ public class Agenda extends JFrame {
 	private ResultSet rs; // Depois Ctrl Shift o //ele serve para pesquisa
 	private JButton btnCreate;
 	private JButton btnBuscar;
+	private JButton btnUpdate;
+	private JButton btnDelete;
 
 	/**
 	 * Launch the application.
@@ -118,6 +120,8 @@ public class Agenda extends JFrame {
 		txtEmail.setColumns(10);
 
 		btnCreate = new JButton("");
+		btnCreate.setEnabled(false);
+		btnCreate.setBorderPainted(false);
 		btnCreate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// botão adicionar contato
@@ -129,7 +133,7 @@ public class Agenda extends JFrame {
 		btnCreate.setContentAreaFilled(false);
 		btnCreate.setBorder(null);
 		btnCreate.setIcon(new ImageIcon(Agenda.class.getResource("/img/create.png")));
-		btnCreate.setBounds(40, 242, 64, 64);
+		btnCreate.setBounds(40, 253, 64, 53);
 		contentPane.add(btnCreate);
 
 		lblStatus = new JLabel("");
@@ -165,22 +169,52 @@ public class Agenda extends JFrame {
 		btnLimpar.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		btnLimpar.setContentAreaFilled(false);
 		btnLimpar.setBorderPainted(false);
-		btnLimpar.setBounds(263, 242, 64, 64);
+		btnLimpar.setBounds(179, 253, 64, 53);
 		contentPane.add(btnLimpar);
 
 		btnBuscar = new JButton("");
+		btnBuscar.setContentAreaFilled(false);
+		btnBuscar.setBorderPainted(false);
+		btnBuscar.setIcon(new ImageIcon(Agenda.class.getResource("/img/search.png")));
 		btnBuscar.setToolTipText("Pesquisar Contato");
-		btnBuscar.setSelectedIcon(new ImageIcon(Agenda.class.getResource("/img/search2.png")));
 		btnBuscar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				buscarContato();
 			}
 		});
-		btnBuscar.setBounds(407, 82, 48, 48);
+		btnBuscar.setBounds(403, 69, 48, 48);
 		contentPane.add(btnBuscar);
 
 		// substituir o click pela tecla <enter> em um botão
 		getRootPane().setDefaultButton(btnBuscar);
+		
+		btnUpdate = new JButton("");
+		btnUpdate.setEnabled(false);
+		btnUpdate.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				editarContato();
+			}
+		});
+		btnUpdate.setToolTipText("Trocar informação do contato");
+		btnUpdate.setContentAreaFilled(false);
+		btnUpdate.setBorderPainted(false);
+		btnUpdate.setIcon(new ImageIcon(Agenda.class.getResource("/img/update.png")));
+		btnUpdate.setBounds(114, 258, 48, 48);
+		contentPane.add(btnUpdate);
+		
+		btnDelete = new JButton("");
+		btnDelete.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			excluirContato();
+			}
+		});
+		btnDelete.setEnabled(false);
+		btnDelete.setToolTipText("Apagar Contato");
+		btnDelete.setContentAreaFilled(false);
+		btnDelete.setBorderPainted(false);
+		btnDelete.setIcon(new ImageIcon(Agenda.class.getResource("/img/trash.png")));
+		btnDelete.setBounds(253, 258, 48, 48);
+		contentPane.add(btnDelete);
 
 	}// fim do construtor
 
@@ -279,6 +313,11 @@ public class Agenda extends JFrame {
 					txtEmail.setText(rs.getString(4));
 					// desativar botão adiconar
 					btnCreate.setEnabled(false);
+					// ativar botão update e delete
+					btnDelete.setEnabled(true);
+					btnUpdate.setEnabled(true);
+					// desativar botão buscar depois da pesquisa
+					btnBuscar.setEnabled(false);
 				} else {
 					JOptionPane.showMessageDialog(null, "Contato inexiste");
 					// ativar o botão adicionar
@@ -296,6 +335,75 @@ public class Agenda extends JFrame {
 	}// fim do metodo buscar contato
 
 	/**
+	 * Metodo responsável pela edição de um contato / updade
+	 */
+	private void editarContato(){
+		//System.out.println("Teste do Botão Editar");
+		//validação de campos obrigatorios
+		if (txtNome.getText().isEmpty()) {
+			JOptionPane.showMessageDialog(null, "Preencha o Nome");
+			txtNome.requestFocus();
+		} else if (txtFone.getText().isEmpty()) {
+			JOptionPane.showMessageDialog(null, "Preencha o Telefone");	
+		} else {
+			//logica principal (CRUD UPDATE)
+			//criando uma variavel do tipo string que irá receber a query
+			String update = "update contatos set nome=?, fone=?, email=? where id = ?";
+			//tratamento de exceções 
+			try {
+				//abrir conexão com o banco
+				con = dao.conectar();
+				//preparar a query(substituir ????)
+				pst = con.prepareStatement(update);
+				pst.setString(1, txtNome.getText());
+				pst.setString(2, txtFone.getText());
+				pst.setString(3, txtEmail.getText());
+				pst.setString(4, txtID.getText());
+				//executar o update no banco
+				pst.executeUpdate();
+				//comfirmar para o usuario
+				JOptionPane.showMessageDialog(null, "Dados do Contato alterado com Sucesso");
+				// Fechar conexão
+				con.close();
+				//limpar campos
+				limparCampos();
+			} catch (Exception e) {
+				System.out.println(e);
+			}
+		}
+	}//fim do metodo editar contato
+	
+	/**
+	 * Metodo Responsavel por excluir um contato
+	 */
+	private void excluirContato() {
+		//System.out.println("Teste do Botao excluir");
+		//confirmação de exclusão
+		// A VARIÁVEL CONFIRMA A OPÇÃO ESCOLHIDA DO JOptionPane
+		int confirma = JOptionPane.showConfirmDialog(null, "Confirma a exclusão desse contato?", "ATENÇÃO!", JOptionPane.YES_NO_OPTION);
+		if (confirma == JOptionPane.YES_OPTION) {
+			//query (instrução sql)
+			String delete = "delete from contatos where id=?" ;
+					try {
+						
+						//abrir conexão
+						con = dao.conectar();
+						// preparar a query 
+						pst = con.prepareStatement(delete);
+						pst.setString(1, txtID.getText());
+						//executar a query
+						pst.executeUpdate();
+						//limpar campos
+						limparCampos();
+						JOptionPane.showMessageDialog(null, "Contato excluído");
+					} catch (Exception e) {
+						System.out.println(e);
+					}
+		}
+	}//fim do metodo excluir contato
+	
+	
+	/**
 	 * Método responsável por limpar os campos
 	 */
 	private void limparCampos() {
@@ -304,7 +412,9 @@ public class Agenda extends JFrame {
 		txtFone.setText(null);
 		txtEmail.setText(null);
 		// setar botoes pesquisar e criar
-		btnCreate.setEnabled(true);
+		btnCreate.setEnabled(false);
+		btnUpdate.setEnabled(false);
+		btnDelete.setEnabled(false);
 		btnBuscar.setEnabled(true);
 	} // fim do método limparCampos()
 }// fim do código

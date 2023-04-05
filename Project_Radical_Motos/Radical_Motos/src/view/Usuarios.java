@@ -39,6 +39,8 @@ public class Usuarios extends JDialog {
 	private ResultSet rs; // Depois Ctrl Shift o //ele serve para pesquisa
 	private JButton btnBuscar;
 	private JButton btnCreate;
+	private JButton btnUpdate;
+	private JButton btnDelete;
 
 	/**
 	 * Launch the application.
@@ -89,6 +91,8 @@ public class Usuarios extends JDialog {
 		txtLogin.setColumns(10);
 		
 		btnCreate = new JButton("");
+		btnCreate.setEnabled(false);
+		btnCreate.setBorderPainted(false);
 		btnCreate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				adicionarUsuario();
@@ -100,6 +104,7 @@ public class Usuarios extends JDialog {
 		contentPanel.add(btnCreate);
 		
 		JButton btnLimpar = new JButton("");
+		btnLimpar.setBorderPainted(false);
 		btnLimpar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				limparCampos();
@@ -109,7 +114,7 @@ public class Usuarios extends JDialog {
 		btnLimpar.setToolTipText("Limpar Campos");
 		btnLimpar.setContentAreaFilled(false);
 		btnLimpar.setIcon(new ImageIcon(Usuarios.class.getResource("/img/eraser.png")));
-		btnLimpar.setBounds(110, 202, 48, 48);
+		btnLimpar.setBounds(218, 202, 48, 48);
 		contentPanel.add(btnLimpar);
 		
 		txtSenha = new JPasswordField();
@@ -127,19 +132,47 @@ public class Usuarios extends JDialog {
 		txtID.setColumns(10);
 		
 		btnBuscar = new JButton("");
+		btnBuscar.setBorderPainted(false);
+		btnBuscar.setContentAreaFilled(false);
+		btnBuscar.setIcon(new ImageIcon(Usuarios.class.getResource("/img/search-moto.png")));
 		btnBuscar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				buscarContato();
 			}
 		});
 		btnBuscar.setToolTipText("Pesquisar Contato");
-		btnBuscar.setSelectedIcon(new ImageIcon(Usuarios.class.getResource("/img/search-moto.png")));
 		btnBuscar.setBounds(218, 100, 48, 48);
 		contentPanel.add(btnBuscar);
 		
 		
 		// substituir o click pela tecla <enter> em um botão
 		getRootPane().setDefaultButton(btnBuscar);
+		
+		btnUpdate = new JButton("");
+		btnUpdate.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			editarUsuario();
+			}
+		});
+		btnUpdate.setEnabled(false);
+		btnUpdate.setBorderPainted(false);
+		btnUpdate.setContentAreaFilled(false);
+		btnUpdate.setIcon(new ImageIcon(Usuarios.class.getResource("/img/update-motos.png")));
+		btnUpdate.setBounds(102, 202, 48, 48);
+		contentPanel.add(btnUpdate);
+		
+		btnDelete = new JButton("");
+		btnDelete.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			excluirUsuario();
+			}
+		});
+		btnDelete.setEnabled(false);
+		btnDelete.setBorderPainted(false);
+		btnDelete.setContentAreaFilled(false);
+		btnDelete.setIcon(new ImageIcon(Usuarios.class.getResource("/img/trash.png")));
+		btnDelete.setBounds(160, 202, 48, 48);
+		contentPanel.add(btnDelete);
 
 		
 		
@@ -227,6 +260,11 @@ public class Usuarios extends JDialog {
 					txtSenha.setText(rs.getString(4));
 					// desativar botão adiconar
 					btnCreate.setEnabled(false);
+					// ativar botão update e delete
+					btnDelete.setEnabled(true);
+					btnUpdate.setEnabled(true);
+					// desativar botão buscar depois da pesquisa
+					btnBuscar.setEnabled(false);
 				} else {
 					JOptionPane.showMessageDialog(null, "Usuário Inexistente");
 					// ativar o botão adicionar
@@ -246,6 +284,80 @@ public class Usuarios extends JDialog {
 	
 	
 	/**
+	 * Metodo responsável pela edição de um contato / updade
+	 */
+	private void editarUsuario(){
+		//System.out.println("Teste do Botão Editar");
+		//validação de campos obrigatorios
+		if (txtNome.getText().isEmpty()) {
+			JOptionPane.showMessageDialog(null, "Preencha o Nome");
+			txtNome.requestFocus();
+		} else if (txtLogin.getText().isEmpty()) {
+			JOptionPane.showMessageDialog(null, "Preencha o Login");	
+		}else if (txtSenha.getText().isEmpty()) {
+			JOptionPane.showMessageDialog(null, "Preencha a Senha");	
+		} else {
+			//logica principal (CRUD UPDATE)
+			//criando uma variavel do tipo string que irá receber a query
+			String update = "update usuarios set nome=?, login=?, senha=? where iduser = ?";
+			//tratamento de exceções 
+			try {
+				//abrir conexão com o banco
+				con = dao.conectar();
+				//preparar a query(substituir ????)
+				pst = con.prepareStatement(update);
+				pst.setString(1, txtNome.getText());
+				pst.setString(2, txtLogin.getText());
+				pst.setString(3, txtSenha.getText());
+				pst.setString(4, txtID.getText());
+				//executar o update no banco
+				pst.executeUpdate();
+				//comfirmar para o usuario
+				JOptionPane.showMessageDialog(null, "Dados do Usuário alterado com Sucesso");
+				// Fechar conexão
+				con.close();
+				//limpar campos
+				limparCampos();
+			} catch (Exception e) {
+				System.out.println(e);
+			}
+		}
+	}//fim do metodo editar contato
+	
+	/**
+	 * Metodo Responsavel por excluir um contato
+	 */
+	private void excluirUsuario() {
+		//System.out.println("Teste do Botao excluir");
+		//confirmação de exclusão
+		// A VARIÁVEL CONFIRMA A OPÇÃO ESCOLHIDA DO JOptionPane
+		int confirma = JOptionPane.showConfirmDialog(null, "Confirma a exclusão desse usuário?", "ATENÇÃO!", JOptionPane.YES_NO_OPTION);
+		if (confirma == JOptionPane.YES_OPTION) {
+			//query (instrução sql)
+			String delete = "delete from usuarios where iduser=?" ;
+					try {
+						
+						//abrir conexão
+						con = dao.conectar();
+						// preparar a query 
+						pst = con.prepareStatement(delete);
+						pst.setString(1, txtID.getText());
+						//executar a query
+						pst.executeUpdate();
+						//limpar campos
+						limparCampos();
+						JOptionPane.showMessageDialog(null, "Usuário excluído");
+					} catch (Exception e) {
+						System.out.println(e);
+					}
+		}
+	}//fim do metodo excluir contato
+	
+	
+	
+	
+	
+	/**
 	 * Método responsável por limpar os campos
 	 */
 	private void limparCampos() {
@@ -254,7 +366,9 @@ public class Usuarios extends JDialog {
 		txtLogin.setText(null);
 		txtSenha.setText(null);
 		// setar botoes pesquisar e criar
-		btnCreate.setEnabled(true);
+		btnCreate.setEnabled(false);
+		btnUpdate.setEnabled(false);
+		btnDelete.setEnabled(false);
 		btnBuscar.setEnabled(true);
 	} //fim do método limparCampos()
 }//fim do codigo
